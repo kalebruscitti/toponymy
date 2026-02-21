@@ -75,6 +75,9 @@ def llm_output_to_result(llm_output: str, regex: str) -> dict:
 
     return result
 
+def _warn_and_return(retry_state):
+    print("Warning: calling LLM failed after {retry_state.attempt_number} attempts")
+    return ""
 
 class LLMWrapper(ABC):
 
@@ -100,7 +103,7 @@ class LLMWrapper(ABC):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry_error_callback=lambda x: "",
+        retry_error_callback=lambda x: _warn_and_return(x),
         retry=retry_if_exception(_should_retry),
     )
     def generate_topic_name(
